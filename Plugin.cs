@@ -8,7 +8,6 @@ using GorillaInfoWatch.Models.Widgets;
 using GorillaNetworking;
 using HarmonyLib;
 using Photon.Pun;
-using RoomUtils.Patches;
 using UnityEngine;
 
 [assembly: InfoWatchCompatible]
@@ -22,19 +21,21 @@ namespace RoomUtils
 
         internal InfoWatchPage InfoWatchPageInstance;
 
-        private static Plugin            Instance  { get; set; }
-        private new    ConfigFile        Config    => base.Config;
+        private static Plugin Instance { get; set; }
+
+        private new ConfigFile Config => base.Config;
+
         //public static  ConfigEntry<bool> Knockback { get; private set; }
-        private static ConfigEntry<bool> Wind      { get; set; }
+        private static ConfigEntry<bool> Wind { get; set; }
 
         private void Awake()
         {
             Instance = this;
 
             //Knockback                       = Config.Bind("Room Utils", "NoKnockback", false, "Disable knockback");
-            Wind                            = Config.Bind("Room Utils", "DisableWind", false, "Disable wind effects");
+            Wind = Config.Bind("Room Utils", "DisableWind", false, "Disable wind effects");
             //KnockbackState.KnockbackEnabled = Knockback.Value;
-            WindState.WindEnabled           = Wind.Value;
+            WindState.WindEnabled = Wind.Value;
         }
 
         private void Start()
