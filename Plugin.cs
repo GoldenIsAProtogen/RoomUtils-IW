@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace RoomUtils
 {
-    [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
+    [BepInPlugin(Constants.Guid, Constants.Name, Constants.Version)]
     public class Plugin : BaseUnityPlugin
     {
         private Harmony harmony;
@@ -24,32 +24,32 @@ namespace RoomUtils
 
         private static Plugin            Instance  { get; set; }
         private new    ConfigFile        Config    => base.Config;
-        public static  ConfigEntry<bool> Knockback { get; private set; }
+        //public static  ConfigEntry<bool> Knockback { get; private set; }
         private static ConfigEntry<bool> Wind      { get; set; }
 
         private void Awake()
         {
             Instance = this;
 
-            Knockback                       = Config.Bind("Room Utils", "NoKnockback", false, "Disable knockback");
+            //Knockback                       = Config.Bind("Room Utils", "NoKnockback", false, "Disable knockback");
             Wind                            = Config.Bind("Room Utils", "DisableWind", false, "Disable wind effects");
-            KnockbackState.KnockbackEnabled = Knockback.Value;
+            //KnockbackState.KnockbackEnabled = Knockback.Value;
             WindState.WindEnabled           = Wind.Value;
         }
 
         private void Start()
         {
-            harmony = new Harmony(Constants.GUID);
+            harmony = new Harmony(Constants.Guid);
             harmony.PatchAll();
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
                     { { Constants.HashKey, Constants.Version }, });
         }
 
-        public static class KnockbackState
+        /*public static class KnockbackState
         {
             public static bool KnockbackEnabled { get; set; }
-        }
+        }*/
 
         public static class WindState
         {
@@ -153,7 +153,7 @@ namespace RoomUtils
 
                 lines.Skip();
 
-                lines.Add("Knockback", new List<Widget_Base>
+                /*lines.Add("Knockback", new List<Widget_Base>
                 {
                         new Widget_Switch(!Plugin.Knockback.Value, value =>
                                                                    {
@@ -161,7 +161,7 @@ namespace RoomUtils
                                                                        KnockbackState.KnockbackEnabled = !value;
                                                                        SetContent();
                                                                    }),
-                });
+                });*/
 
                 lines.Add("Wind", new List<Widget_Base>
                 {
@@ -194,9 +194,9 @@ namespace RoomUtils
                 SetContent();
             }
 
-            private void Knockback(object[] args) => KnockbackPatch.enabled = false;
+            //private void Knockback(object[] args) => KnockbackPatch.enabled = false;
 
-            private void NoKnockback(object[] args) => KnockbackPatch.enabled = true;
+            //private void NoKnockback(object[] args) => KnockbackPatch.enabled = true;
 
             private async void JoinRandom(object[] args)
             {

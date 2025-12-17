@@ -1,4 +1,4 @@
-using GorillaLocomotion;
+/*using GorillaLocomotion;
 using HarmonyLib;
 using UnityEngine;
 
@@ -15,4 +15,4 @@ namespace RoomUtils.Patches
             return !disabled;
         }
     }
-}
+}*/
