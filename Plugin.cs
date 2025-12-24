@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
-using ExitGames.Client.Photon;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
@@ -9,6 +8,7 @@ using GorillaNetworking;
 using HarmonyLib;
 using Photon.Pun;
 using UnityEngine;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 [assembly: InfoWatchCompatible]
 
@@ -25,17 +25,27 @@ namespace RoomUtils
 
         private new ConfigFile Config => base.Config;
 
-        //public static  ConfigEntry<bool> Knockback { get; private set; }
-        private static ConfigEntry<bool> Wind { get; set; }
+        private static ConfigEntry<bool> Wind           { get; set; }
+        private static ConfigEntry<bool> DisableAFKKick { get; set; }
 
         private void Awake()
         {
             Instance = this;
 
-            //Knockback                       = Config.Bind("Room Utils", "NoKnockback", false, "Disable knockback");
-            Wind = Config.Bind("Room Utils", "DisableWind", false, "Disable wind effects");
-            //KnockbackState.KnockbackEnabled = Knockback.Value;
-            WindState.WindEnabled = Wind.Value;
+            Wind = Config.Bind(
+                    "Room Utils",
+                    "DisableWind",
+                    false,
+                    "Disable wind effects");
+
+            DisableAFKKick = Config.Bind(
+                    "Room Utils",
+                    "DisableAFKKick",
+                    false,
+                    "Disable AFK kick");
+
+            WindState.WindEnabled       = !Wind.Value;
+            AFKKickState.AFKKickEnabled = !DisableAFKKick.Value;
         }
 
         private void Start()
@@ -45,26 +55,34 @@ namespace RoomUtils
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
                     { { Constants.HashKey, Constants.Version }, });
+
+            ApplyAFKKickState();
         }
 
-        /*public static class KnockbackState
+        internal static void ApplyAFKKickState()
         {
-            public static bool KnockbackEnabled { get; set; }
-        }*/
+            if (PhotonNetworkController.Instance != null)
+                PhotonNetworkController.Instance.disableAFKKick = !AFKKickState.AFKKickEnabled;
+        }
 
         public static class WindState
         {
             public static bool WindEnabled { get; set; }
         }
 
+        public static class AFKKickState
+        {
+            public static bool AFKKickEnabled { get; set; }
+        }
+
         [ShowOnHomeScreen(DisplayTitle = "Room Utils")]
         internal class InfoWatchPage : InfoScreen
         {
-            private static ConfigEntry<bool> disableJoinTriggers = Instance.Config.Bind("Room Utils",
-                    "DisableJoinTriggers", false, "Disable join room triggers");
+            private static ConfigEntry<bool> disableJoinTriggers =
+                    Instance.Config.Bind("Room Utils", "DisableJoinTriggers", false, "Disable join room triggers");
 
-            private static ConfigEntry<bool> disableMapTriggers = Instance.Config.Bind("Room Utils",
-                    "DisableMapTriggers", false, "Disable map transition triggers");
+            private static ConfigEntry<bool> disableMapTriggers =
+                    Instance.Config.Bind("Room Utils", "DisableMapTriggers", false, "Disable map transition triggers");
 
             private static ConfigEntry<bool> disableQuitBox =
                     Instance.Config.Bind("Room Utils", "DisableQuitBox", false, "Disable quitbox trigger");
@@ -75,12 +93,18 @@ namespace RoomUtils
             {
                 LineBuilder lines = new LineBuilder();
 
-                lines.Add("Disconnect",  new List<Widget_Base> { new Widget_PushButton(Disconnect), });
-                lines.Add("Join Random", new List<Widget_Base> { new Widget_PushButton(JoinRandom), });
+                lines.Add("Disconnect", new List<Widget_Base>
+                {
+                        new Widget_PushButton(Disconnect),
+                });
+
+                lines.Add("Join Random", new List<Widget_Base>
+                {
+                        new Widget_PushButton(JoinRandom),
+                });
 
                 lines.Skip();
 
-                // Get current active states on game start
                 bool roomTriggersActive =
                         IsTriggerActive("Environment Objects/TriggerZones_Prefab/JoinRoomTriggers_Prefab");
 
@@ -90,94 +114,78 @@ namespace RoomUtils
                 bool quitBoxActive =
                         IsTriggerActive("Environment Objects/TriggerZones_Prefab/ZoneTransitions_Prefab/QuitBox");
 
-                lines.Add("Room Triggers",
-                        new List<Widget_Base>
-                        {
-                                new Widget_Switch(roomTriggersActive, value =>
-                                                                      {
-                                                                          SetTriggerState(
-                                                                                  "Environment Objects/TriggerZones_Prefab/JoinRoomTriggers_Prefab",
-                                                                                  value);
+                lines.Add("Room Triggers", new List<Widget_Base>
+                {
+                        new Widget_Switch(roomTriggersActive, value =>
+                                                              {
+                                                                  SetTriggerState(
+                                                                          "Environment Objects/TriggerZones_Prefab/JoinRoomTriggers_Prefab",
+                                                                          value);
 
-                                                                          SetContent();
-                                                                      }),
-                        });
+                                                                  SetContent();
+                                                              }),
+                });
 
-                lines.Add("Map Triggers",
-                        new List<Widget_Base>
-                        {
-                                new Widget_Switch(mapTriggersActive, value =>
-                                                                     {
-                                                                         SetTriggerState(
-                                                                                 "Environment Objects/TriggerZones_Prefab/ZoneTransitions_Prefab",
-                                                                                 value);
+                lines.Add("Map Triggers", new List<Widget_Base>
+                {
+                        new Widget_Switch(mapTriggersActive, value =>
+                                                             {
+                                                                 SetTriggerState(
+                                                                         "Environment Objects/TriggerZones_Prefab/ZoneTransitions_Prefab",
+                                                                         value);
 
-                                                                         SetContent();
-                                                                     }),
-                        });
+                                                                 SetContent();
+                                                             }),
+                });
 
-                lines.Add("Quitbox",
-                        new List<Widget_Base>
-                        {
-                                new Widget_Switch(quitBoxActive, value =>
-                                                                 {
-                                                                     SetTriggerState(
-                                                                             "Environment Objects/TriggerZones_Prefab/ZoneTransitions_Prefab/QuitBox",
-                                                                             value);
+                lines.Add("Quitbox", new List<Widget_Base>
+                {
+                        new Widget_Switch(quitBoxActive, value =>
+                                                         {
+                                                             SetTriggerState(
+                                                                     "Environment Objects/TriggerZones_Prefab/ZoneTransitions_Prefab/QuitBox",
+                                                                     value);
 
-                                                                     SetContent();
-                                                                 }),
-                        });
+                                                             SetContent();
+                                                         }),
+                });
 
-                bool afkKickDisabled = PhotonNetworkController.Instance != null &&
-                                       PhotonNetworkController.Instance.disableAFKKick;
+                lines.Add("AFK Kick", new List<Widget_Base>
+                {
+                        new Widget_Switch(
+                                AFKKickState.AFKKickEnabled,
+                                value =>
+                                {
+                                    AFKKickState.AFKKickEnabled = value;
+                                    DisableAFKKick.Value        = !value;
 
-                bool initialState = !afkKickDisabled;
+                                    ApplyAFKKickState();
 
-                lines.Add("AFK Kick",
-                        new List<Widget_Base>
-                        {
-                                new Widget_Switch(initialState, value =>
-                                                                {
-                                                                    if (PhotonNetworkController.Instance != null)
-                                                                    {
-                                                                        PhotonNetworkController.Instance
-                                                                               .disableAFKKick = !value;
+                                    Debug.Log("[ROOM UTILS - IW] AFK Kick "    +
+                                              (value ? "enabled" : "disabled") + ".");
 
-                                                                        Debug.Log("[ROOM UTILS - IW] AFK Kick " +
-                                                                            (value ? "enabled" : "disabled")    + ".");
-                                                                    }
-
-                                                                    SetContent();
-                                                                }),
-                        });
+                                    SetContent();
+                                }),
+                });
 
                 lines.Skip();
 
-                /*lines.Add("Knockback", new List<Widget_Base>
-                {
-                        new Widget_Switch(!Plugin.Knockback.Value, value =>
-                                                                   {
-                                                                       Plugin.Knockback.Value          = !value;
-                                                                       KnockbackState.KnockbackEnabled = !value;
-                                                                       SetContent();
-                                                                   }),
-                });*/
-
                 lines.Add("Wind", new List<Widget_Base>
                 {
-                        new Widget_Switch(!Wind.Value, value =>
-                                                       {
-                                                           Wind.Value            = !value;
-                                                           WindState.WindEnabled = !value;
-                                                           SetContent();
-                                                       }),
+                        new Widget_Switch(
+                                WindState.WindEnabled,
+                                value =>
+                                {
+                                    WindState.WindEnabled = value;
+                                    Wind.Value            = !value;
+
+                                    SetContent();
+                                }),
                 });
 
                 return lines;
             }
 
-            // Helper method to check if trigger GameObject is active
             private bool IsTriggerActive(string objectPath)
             {
                 GameObject obj = GameObject.Find(objectPath);
@@ -190,22 +198,15 @@ namespace RoomUtils
                 if (NetworkSystem.Instance.InRoom)
                     PhotonNetwork.Disconnect();
                 else
-                    Debug.LogWarning("[ROOM UTILS - IW] Attempted to disconnect from room when not connected.");
+                    Debug.LogWarning("[ROOM UTILS - IW] Attempted to disconnect while not in room.");
 
                 SetContent();
             }
-
-            //private void Knockback(object[] args) => KnockbackPatch.enabled = false;
-
-            //private void NoKnockback(object[] args) => KnockbackPatch.enabled = true;
 
             private async void JoinRandom(object[] args)
             {
                 if (NetworkSystem.Instance.InRoom)
                     await NetworkSystem.Instance.ReturnToSinglePlayer();
-
-                else
-                    Debug.Log("Not connected to a room.");
 
                 string gamemode = PhotonNetworkController.Instance.currentJoinTrigger == null
                                           ? "forest"
