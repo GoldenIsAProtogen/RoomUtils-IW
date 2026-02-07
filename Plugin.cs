@@ -26,26 +26,20 @@ namespace RoomUtils
         private new ConfigFile Config => base.Config;
 
         private static ConfigEntry<bool> Wind           { get; set; }
+        public static  ConfigEntry<bool> Knockback      { get; private set; }
         private static ConfigEntry<bool> DisableAFKKick { get; set; }
 
         private void Awake()
         {
             Instance = this;
 
-            Wind = Config.Bind(
-                    "Room Utils",
-                    "DisableWind",
-                    false,
-                    "Disable wind effects");
+            Wind           = Config.Bind("Room Utils", "DisableWind",    false, "Disable wind effects");
+            Knockback      = Config.Bind("Room Utils", "NoKnockback",    false, "Disable knockback");
+            DisableAFKKick = Config.Bind("Room Utils", "DisableAFKKick", false, "Disable AFK kick");
 
-            DisableAFKKick = Config.Bind(
-                    "Room Utils",
-                    "DisableAFKKick",
-                    false,
-                    "Disable AFK kick");
-
-            WindState.WindEnabled       = !Wind.Value;
-            AFKKickState.AFKKickEnabled = !DisableAFKKick.Value;
+            WindState.WindEnabled           = !Wind.Value;
+            KnockbackState.KnockbackEnabled = Knockback.Value;
+            AFKKickState.AFKKickEnabled     = !DisableAFKKick.Value;
         }
 
         private void Start()
@@ -68,6 +62,11 @@ namespace RoomUtils
         public static class WindState
         {
             public static bool WindEnabled { get; set; }
+        }
+
+        public static class KnockbackState
+        {
+            public static bool KnockbackEnabled { get; set; }
         }
 
         public static class AFKKickState
@@ -181,6 +180,16 @@ namespace RoomUtils
 
                                     SetContent();
                                 }),
+                });
+
+                lines.Add("Knockback", new List<Widget_Base>
+                {
+                        new Widget_Switch(!Knockback.Value, value =>
+                                                            {
+                                                                Knockback.Value                 = !value;
+                                                                KnockbackState.KnockbackEnabled = !value;
+                                                                SetContent();
+                                                            }),
                 });
 
                 return lines;

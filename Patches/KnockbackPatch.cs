@@ -1,4 +1,4 @@
-/*using GorillaLocomotion;
+using GorillaLocomotion;
 using HarmonyLib;
 using UnityEngine;
 
@@ -12,7 +12,8 @@ namespace RoomUtils.Patches
         public static bool Prefix(Vector3 direction, float speed)
         {
             bool disabled = enabled || Plugin.Knockback.Value || Plugin.KnockbackState.KnockbackEnabled;
+
             return !disabled;
         }
     }
-}*/
+}

@@ -1,7 +1,10 @@
 # RoomUtils-InfoWatch
+
 ### Room Utilities for GorillaInfoWatch
-**_Room Utils_** is a utility mod for gorilla tag. 
+
+**_Room Utils_** is a utility mod for gorilla tag.
 As of right now you can:
+
 - Disconnect
 - Join Random
 - Toggle Room Triggers
@@ -10,8 +13,9 @@ As of right now you can:
 - AFK Kick
 - Knockback (Currently unavaliable)
 - Wind
-  
-Room utils currently only works with GorillaInfoWatch. I may add support for other mods later such as BananaOS, GorillaStats, exc...
+
+Room utils currently only works with GorillaInfoWatch. I may add support for other mods later such as BananaOS,
+GorillaStats, exc...
 
 If you want to add support for them mods yourself feel free to fork and make a pull request.<br>
 <img width="816" height="1080" alt="image" src="https://github.com/user-attachments/assets/ef34b1e2-ce47-48ce-bf6c-621d65dbf67d" />
