@@ -11,8 +11,8 @@ As of right now you can:
 - Toggle Map Triggers
 - Toggle Quit Box
 - AFK Kick
-- Knockback (Currently unavaliable)
 - Wind
+- Knockback
 
 Room utils currently only works with GorillaInfoWatch. I may add support for other mods later such as BananaOS,
 GorillaStats, exc...
